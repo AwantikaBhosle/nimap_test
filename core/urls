@@ -1,0 +1,12 @@
+from django.urls import path
+from .views import (
+    ClientListCreateView, ClientRetrieveUpdateDestroyView,
+    ClientProjectCreateView, UserProjectsListView
+)
+
+urlpatterns = [
+    path('clients/', ClientListCreateView.as_view(), name='clients-list-create'),
+    path('clients/<int:pk>/', ClientRetrieveUpdateDestroyView.as_view(), name='client-detail'),
+    path('clients/<int:client_pk>/projects/', ClientProjectCreateView.as_view(), name='client-create-project'),
+    path('projects/', UserProjectsListView.as_view(), name='user-projects'),
+]
