@@ -1,0 +1,48 @@
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from .models import Client, Project
+from .serializers import (
+    ClientSerializer, ClientCreateSerializer,
+    ProjectCreateSerializer, ProjectSerializer
+)
+
+class ClientListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Client.objects.all()
+
+    def get_serializer_class(self):
+        return ClientSerializer if self.request.method == 'GET' else ClientCreateSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class ClientRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+
+
+class ClientProjectCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, client_pk):
+        client = get_object_or_404(Client, pk=client_pk)
+        serializer = ProjectCreateSerializer(
+            data=request.data,
+            context={'request': request, 'client': client}
+        )
+        serializer.is_valid(raise_exception=True)
+        project = serializer.save()
+        return Response(ProjectSerializer(project).data, status=status.HTTP_201_CREATED)
+
+
+class UserProjectsListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProjectSerializer
+
+    def get_queryset(self):
+        return self.request.user.projects.all()
